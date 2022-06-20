@@ -7,54 +7,51 @@ namespace RedisStreams.Persistence.EntityAdapters
 {
 	class ConcurrentEntityAdapter<TEntity> : BaseEntityAdapter<TEntity>, IConcurrentEntityAdapter<TEntity> where TEntity : class
 	{
-		private readonly ITransaction _transaction;
-
-		public ConcurrentEntityAdapter(string moduleName, ITransaction transaction, IRedisSerializer<TEntity> serializer) : base(moduleName, transaction, serializer)
+		public ConcurrentEntityAdapter(string moduleName, IRedisSerializer<TEntity> serializer) : base(moduleName, serializer)
 		{
-			_transaction = transaction;
 		}
 
-		public Task<bool> SetAsync(RedisKey key, TEntity entity, TimeSpan? expiry, string? expectedConcurrencyToken, string newConcurrencyToken)
+		public Task<bool> SetAsync(ITransaction tran, RedisKey key, TEntity entity, TimeSpan? expiry, string? expectedConcurrencyToken, string newConcurrencyToken)
 		{
 			var concurrencyTokenKey = GetConcurrencyTokenKey(key);
 
-			return SetAsync(key, entity, expiry, expectedConcurrencyToken, newConcurrencyToken, concurrencyTokenKey);
+			return SetAsync(tran, key, entity, expiry, expectedConcurrencyToken, newConcurrencyToken, concurrencyTokenKey);
 		}
 
-		public Task<bool> SetAsync(RedisKey key, TEntity entity, TimeSpan? expiry, string? expectedConcurrencyToken, string newConcurrencyToken, string concurrencyTokenKey)
+		public Task<bool> SetAsync(ITransaction tran, RedisKey key, TEntity entity, TimeSpan? expiry, string? expectedConcurrencyToken, string newConcurrencyToken, string concurrencyTokenKey)
 		{
-			EnsureConcurrency(concurrencyTokenKey, expectedConcurrencyToken);
+			EnsureConcurrency(tran, concurrencyTokenKey, expectedConcurrencyToken);
 
-			_transaction.StringSetAsync(concurrencyTokenKey, newConcurrencyToken);
+			tran.StringSetAsync(concurrencyTokenKey, newConcurrencyToken);
 
-			return _transaction.StringSetAsync(
+			return tran.StringSetAsync(
 				key: GetEntityKey(key),
 				value: _serializer.Serialize(entity),
 				expiry: expiry);
 		}
 
-		public Task<bool> RemoveAsync(RedisKey key, string? expectedConcurrencyToken)
+		public Task<bool> RemoveAsync(ITransaction tran, RedisKey key, string? expectedConcurrencyToken)
 		{
 			var concurrencyTokenKey = GetConcurrencyTokenKey(key);
 
-			return RemoveAsync(key, expectedConcurrencyToken, concurrencyTokenKey);
+			return RemoveAsync(tran, key, expectedConcurrencyToken, concurrencyTokenKey);
 		}
 
-		public Task<bool> RemoveAsync(RedisKey key, string? expectedConcurrencyToken, string concurrencyTokenKey)
+		public Task<bool> RemoveAsync(ITransaction tran, RedisKey key, string? expectedConcurrencyToken, string concurrencyTokenKey)
 		{
-			EnsureConcurrency(concurrencyTokenKey, expectedConcurrencyToken);
+			EnsureConcurrency(tran, concurrencyTokenKey, expectedConcurrencyToken);
 
-			_transaction.KeyDeleteAsync(concurrencyTokenKey);
+			tran.KeyDeleteAsync(concurrencyTokenKey);
 
-			return _transaction.KeyDeleteAsync(key: GetEntityKey(key.ToString()));
+			return tran.KeyDeleteAsync(key: GetEntityKey(key.ToString()));
 		}
 
-		private void EnsureConcurrency(string concurrencyTokenKey, string? expectedConcurrencyToken)
+		private void EnsureConcurrency(ITransaction tran, string concurrencyTokenKey, string? expectedConcurrencyToken)
 		{
 			if (expectedConcurrencyToken is null)
-				_transaction.AddCondition(Condition.KeyNotExists(concurrencyTokenKey));
+				tran.AddCondition(Condition.KeyNotExists(concurrencyTokenKey));
 			else
-				_transaction.AddCondition(Condition.StringEqual(concurrencyTokenKey, expectedConcurrencyToken));
+				tran.AddCondition(Condition.StringEqual(concurrencyTokenKey, expectedConcurrencyToken));
 		}
 
 		private string GetConcurrencyTokenKey(RedisKey key)

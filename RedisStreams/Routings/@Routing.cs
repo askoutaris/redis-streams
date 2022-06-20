@@ -8,16 +8,15 @@ namespace RedisStreams.Routings
 	{
 		public int Version { get; private set; }
 		public string ModuleName { get; }
-		public IReadOnlyCollection<Stream> Streams { get; private set; }
 		public IReadOnlyCollection<Topic> Topics { get; private set; }
 		public DateTime Updated { get; private set; }
 		public string ConcurrencyTokenKey => $"{Constants.Prefix}.{ModuleName}.RoutingVersion";
+		public long GenerateVersion() => ++Version;
 
-		public Routing(int version, string moduleName, IReadOnlyCollection<Stream> streams, IReadOnlyCollection<Topic> topics, DateTime updated)
+		public Routing(int version, string moduleName, IReadOnlyCollection<Topic> topics, DateTime updated)
 		{
 			Version = version;
 			ModuleName = moduleName;
-			Streams = streams;
 			Topics = topics;
 			Updated = updated;
 		}
@@ -27,32 +26,37 @@ namespace RedisStreams.Routings
 			return new Routing(
 				version: 0,
 				moduleName: moduleName,
-				streams: Array.Empty<Stream>(),
 				topics: Array.Empty<Topic>(),
 				updated: DateTime.UtcNow);
 		}
 
-		public void UpdateTopics(Topic[] topics)
+		public void Update(TopicConfiguration[] configurations)
 		{
-			Version++;
 			Updated = DateTime.UtcNow;
 
-			Topics = topics;
-			Streams = GetStreams(Version, topics);
+			Topics = GetTopics(Version, configurations);
 		}
 
-		private Stream[] GetStreams(int version, Topic[] topics)
+		private Topic[] GetTopics(int version, TopicConfiguration[] configurations)
 		{
-			var streams = topics
-				.SelectMany(topic => Enumerable.Range(1, topic.PartitionsCount)
-					.Select(i => new Stream(
-						moduleName: ModuleName,
-						topicName: topic.Name,
-						partitionNumber: i,
-						routingVersion: version)))
+			var streams = configurations
+				.Select(topic => new Topic(
+					name: topic.Name,
+					streams: GetStreams(version, topic)))
 				.ToArray();
 
 			return streams;
+		}
+
+		private Stream[] GetStreams(int version, TopicConfiguration topic)
+		{
+			return Enumerable.Range(1, topic.PartitionsCount)
+				.Select(i => new Stream(
+					moduleName: ModuleName,
+					topicName: topic.Name,
+					partitionNumber: i,
+					routingVersion: version))
+				.ToArray();
 		}
 	}
 }

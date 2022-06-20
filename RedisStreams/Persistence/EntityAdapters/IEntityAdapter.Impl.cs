@@ -7,37 +7,34 @@ namespace RedisStreams.Persistence.EntityAdapters
 {
 	class EntityAdapter<TEntity> : BaseEntityAdapter<TEntity>, IEntityAdapter<TEntity> where TEntity : class
 	{
-		private readonly IDatabase _db;
-
-		public EntityAdapter(string moduleName, IDatabase db, IRedisSerializer<TEntity> serializer) : base(moduleName, db, serializer)
+		public EntityAdapter(string moduleName, IRedisSerializer<TEntity> serializer) : base(moduleName, serializer)
 		{
-			_db = db;
 		}
 
-		public bool Set(RedisKey key, TEntity entity, TimeSpan? expiry)
+		public bool Set(IDatabase db, RedisKey key, TEntity entity, TimeSpan? expiry)
 		{
-			return _db.StringSet(
+			return db.StringSet(
 				key: GetEntityKey(key),
 				value: _serializer.Serialize(entity),
 				expiry: expiry);
 		}
 
-		public Task<bool> SetAsync(RedisKey key, TEntity entity, TimeSpan? expiry)
+		public Task<bool> SetAsync(IDatabase db, RedisKey key, TEntity entity, TimeSpan? expiry)
 		{
-			return _db.StringSetAsync(
+			return db.StringSetAsync(
 				key: GetEntityKey(key),
 				value: _serializer.Serialize(entity),
 				expiry: expiry);
 		}
 
-		public bool Remove(RedisKey key)
+		public bool Remove(IDatabase db, RedisKey key)
 		{
-			return _db.KeyDelete(key: GetEntityKey(key.ToString()));
+			return db.KeyDelete(key: GetEntityKey(key.ToString()));
 		}
 
-		public Task<bool> RemoveAsync(RedisKey key)
+		public Task<bool> RemoveAsync(IDatabase db, RedisKey key)
 		{
-			return _db.KeyDeleteAsync(key: GetEntityKey(key.ToString()));
+			return db.KeyDeleteAsync(key: GetEntityKey(key.ToString()));
 		}
 	}
 }

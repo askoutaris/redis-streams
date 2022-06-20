@@ -1,14 +1,16 @@
-﻿namespace RedisStreams.Routings
+﻿using System.Collections.Generic;
+
+namespace RedisStreams.Routings
 {
-	public class Topic
+	class Topic
 	{
 		public string Name { get; }
-		public int PartitionsCount { get; }
+		public IReadOnlyCollection<Stream> Streams { get; }
 
-		public Topic(string name, int partitionsCount)
+		public Topic(string name, Stream[] streams)
 		{
 			Name = name;
-			PartitionsCount = partitionsCount;
+			Streams = streams;
 		}
 	}
 }

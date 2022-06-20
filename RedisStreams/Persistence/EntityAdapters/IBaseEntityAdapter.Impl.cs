@@ -6,25 +6,23 @@ namespace RedisStreams.Persistence.EntityAdapters
 {
 	class BaseEntityAdapter<TEntity> : IBaseEntityAdapter<TEntity> where TEntity : class
 	{
-		private readonly IDatabaseAsync _db;
 		protected readonly string _moduleName;
 		protected readonly IRedisSerializer<TEntity> _serializer;
 
-		public BaseEntityAdapter(string moduleName, IDatabaseAsync db, IRedisSerializer<TEntity> serializer)
+		public BaseEntityAdapter(string moduleName, IRedisSerializer<TEntity> serializer)
 		{
 			_moduleName = moduleName;
-			_db = db;
 			_serializer = serializer;
 		}
 
-		public async Task<bool> KeyExists(RedisKey key)
+		public async Task<bool> KeyExists(IDatabase db, RedisKey key)
 		{
-			return await _db.KeyExistsAsync(GetEntityKey(key.ToString()));
+			return await db.KeyExistsAsync(GetEntityKey(key.ToString()));
 		}
 
-		public async Task<TEntity?> TryGet(RedisKey key)
+		public async Task<TEntity?> TryGet(IDatabase db, RedisKey key)
 		{
-			var value = await _db.StringGetAsync(key: GetEntityKey(key.ToString()));
+			var value = await db.StringGetAsync(key: GetEntityKey(key.ToString()));
 
 			if (value.IsNull)
 				return null;

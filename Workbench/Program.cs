@@ -20,15 +20,13 @@ namespace Workbench
 				.AddTransient<IDatabase>(_ => multiplexer.GetDatabase())
 				.BuildServiceProvider();
 
-			var db = serviceProvider.GetRequiredService<IDatabase>();
+			var streamConfigurator = StreamsManager.CreateNew("SportsbookPlayers", multiplexer);
 
 			var topics = new[] {
-				new  Topic("MarketOfferMessages", 5)
+				new  TopicConfiguration("MarketOfferMessages", 5)
 			};
 
-			var streamConfigurator = new StreamsConfigurator("SportsbookPlayers", topics);
-
-			await streamConfigurator.Configure(db);
+			await streamConfigurator.Configure(topics);
 
 			//await StreamAdd(db);
 			//await StreamCreateConsumer(db);

@@ -6,10 +6,10 @@ namespace RedisStreams.Persistence.EntityAdapters
 {
 	interface IEntityAdapter<TEntity> : IBaseEntityAdapter<TEntity> where TEntity : class
 	{
-		bool Set(RedisKey key, TEntity entity, TimeSpan? expiry);
-		Task<bool> SetAsync(RedisKey key, TEntity entity, TimeSpan? expiry);
+		bool Set(IDatabase db, RedisKey key, TEntity entity, TimeSpan? expiry);
+		Task<bool> SetAsync(IDatabase db, RedisKey key, TEntity entity, TimeSpan? expiry);
 
-		bool Remove(RedisKey key);
-		Task<bool> RemoveAsync(RedisKey key);
+		bool Remove(IDatabase db, RedisKey key);
+		Task<bool> RemoveAsync(IDatabase db, RedisKey key);
 	}
 }
