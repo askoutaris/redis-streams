@@ -1,4 +1,4 @@
-﻿namespace RedisStreams
+﻿namespace RedisStreams.Routings
 {
 	public class TopicConfiguration
 	{

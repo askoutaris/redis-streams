@@ -3,18 +3,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
-namespace RedisStreams
+namespace RedisStreams.Routings
 {
-	interface IMessageBus
+	interface IMessageRouter
 	{
 		Task Send(IDatabase db, string topicName, string partitionKey, object message);
 	}
 
-	class MessageBus : IMessageBus
+	class MessageRouter : IMessageRouter
 	{
 		private readonly IDictionary<string, ITopicPublisher> _topics;
 
-		public MessageBus(ITopicPublisher[] topics)
+		public MessageRouter(ITopicPublisher[] topics)
 		{
 			_topics = topics.ToDictionary(x => x.Name);
 		}

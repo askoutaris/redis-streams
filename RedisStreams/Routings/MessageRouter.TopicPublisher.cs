@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using RedisStreams.Persistence.Write;
 using StackExchange.Redis;
 
-namespace RedisStreams
+namespace RedisStreams.Routings
 {
 	interface ITopicPublisher
 	{

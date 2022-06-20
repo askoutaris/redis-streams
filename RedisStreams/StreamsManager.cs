@@ -8,7 +8,7 @@ using StackExchange.Redis;
 
 namespace RedisStreams
 {
-	public class StreamsManager
+    public class StreamsManager
 	{
 		private readonly string _moduleName;
 		private readonly IConnectionMultiplexer _multiplexer;
