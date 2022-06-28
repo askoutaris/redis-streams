@@ -12,7 +12,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\RedisStreams\RedisStreams.csproj" />
-	  <ProjectReference Include="..\StackExchange.Redis\StackExchange.Redis.csproj" />
 	</ItemGroup>
 
 </Project>
